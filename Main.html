@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏫 سامانه مدرسه هوشمند</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tahoma', Arial, sans-serif; }
+        body { background: #f0f8f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; transition: 0.3s; }
+        body.dark { background: #1a1a2e; color: #eee; }
+        body.dark .page { background: #16213e; color: #eee; }
+        body.dark input, body.dark select { background: #0f3460; color: #eee; border-color: #533483; }
+        body.dark .chat-box { background: #0f3460; }
+        body.dark .chat-msg { background: #16213e; color: #eee; }
+        body.dark .user-row { background: #0f3460; }
+        body.dark .group-item { background: #0f3460; }
+        body.dark .grade-row { background: #0f3460; }
+        body.dark table th { background: #533483; color: #fff; }
+        body.dark table td { border-color: #533483; }
+
+        .container { width: 100%; max-width: 500px; padding: 20px; }
+
+        #loadingPage {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+            border-radius: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 9999;
+            width: 100%; height: 100%;
+        }
+        #loadingPage h1 { font-size: 28px; margin-bottom: 30px; }
+        .loader {
+            width: 80px; height: 80px;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #FFD700;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .ball {
+            width: 40px; height: 40px;
+            background: #FFD700;
+            border-radius: 50%;
+            margin-top: 20px;
+            animation: moveBall 0.5s alternate infinite;
+        }
+        @keyframes moveBall { 0% { transform: translateX(-80px); } 100% { transform: translateX(80px); } }
+
+        .page {
+            display: none;
+            background: white;
+            padding: 30px 20px;
+            border-radius: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+        .page.active { display: block; }
+        .green-bg { background: #e8f5e9; }
+        .light-green { background: #f1f8e9; }
+
+        h2 { color: #2e7d32; margin-bottom: 20px; text-align: center; }
+        h3 { color: #2e7d32; margin: 15px 0 10px 0; }
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: 2px solid #a5d6a7;
+            border-radius: 15px;
+            font-size: 16px;
+            background: white;
+            transition: 0.3s;
+            resize: vertical;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #FFD700;
+            color: #333;
+            box-shadow: 0 4px 10px rgba(255,215,0,0.3);
+        }
+        button:hover { background: #FFC107; transform: scale(1.02); }
+        button.secondary { background: #FFB300; }
+        button.danger { background: #f44336; color: white; }
+        button.danger:hover { background: #d32f2f; }
+        button.back-btn { background: #78909c; color: white; }
+        button.back-btn:hover { background: #546e7a; }
+        button.toggle-dark {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #333;
+            color: white;
+            border-radius: 20px;
+            margin: 5px auto;
+            display: block;
+        }
+        body.dark button.toggle-dark { background: #FFD700; color: #333; }
+        button.small-danger {
+            width: auto;
+            padding: 5px 12px;
+            font-size: 12px;
+            margin: 0 5px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .btn-group { display: flex; gap: 10px; }
+        .btn-group button { flex: 1; }
+        .chat-box {
+            background: #f5f5f5;
+            border-radius: 15px;
+            padding: 15px;
+            height: 200px;
+            overflow-y: auto;
+            margin: 10px 0;
+            transition: 0.3s;
+        }
+        .chat-msg {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin: 8px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: 0.3s;
+        }
+        .chat-msg .sender { font-weight: bold; color: #2e7d32; }
+        .chat-msg .time { font-size: 12px; color: #999; float: left; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #c8e6c9;
+            text-align: center;
+            transition: 0.3s;
+        }
+        th { background: #FFD700; color: #1b5e20; }
+
+        .user-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e8f5e9;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+        .user-row .name { font-weight: bold; }
+        .user-row .role-badge {
+            font-size: 12px;
+            padding: 3px 12px;
+            border-radius: 20px;
+            background: #FFD700;
+            color: #333;
+        }
+        .group-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .group-item {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            border: 2px solid transparent;
+        }
+        .group-item:hover {
+            border-color: #FFD700;
+            background: #c8e6c9;
+        }
+        .grade-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #e8f5e9;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 5px 0;
+            transition: 0.3s;
+        }
+        .grade-row .score-badge {
+            font-size: 14px;
+            padding: 3px 12px;
+            border-radius: 20px;
+            background: #FFD700;
+            color: #333;
+        }
+
+        .role-badge { font-size: 12px; padding: 3px 12px; border-radius: 20px; background: #FFD700; color: #333; }
+        .badge-admin { background: #9C27B0; color: white; }
+        .badge-teacher { background: #2196F3; color: white; }
+        .badge-student { background: #FF9800; color: white; }
+        .badge-deputy { background: #009688; color: white; }
+
+        .notice-box {
+            background: #fff3cd;
+            border-right: 4px solid #ffc107;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        body.dark .notice-box { background: #2a2a1a; border-color: #ffc107; }
+
+        .chart-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        .chart-bar .bar {
+            height: 20px;
+            background: #FFD700;
+            border-radius: 10px;
+            transition: 0.3s;
+        }
+        body.dark .chart-bar .bar { background: #533483; }
+
+        @media (max-width: 480px) {
+            .container { padding: 10px; }
+            .btn-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="app">
+
+    <!-- ========== صفحه انتظار ========== -->
+    <div id="loadingPage">
+        <h1>🏫 سامانه مدرسه هوشمند</h1>
+        <div class="loader"></div>
+        <div class="ball"></div>
+        <p style="margin-top:30px;font-size:18px;">لطفاً کمی صبر کنید...</p>
+    </div>
+
+    <!-- ========== صفحه اصلی ========== -->
+    <div id="mainPage" class="page green-bg">
+        <h2>🏫 سامانه مدرسه هوشمند</h2>
+        <button onclick="showPage('registerPage')">📝 ثبت نام</button>
+        <button onclick="showPage('loginPage')" class="secondary">🔑 ورود</button>
+        <button onclick="toggleDarkMode()" class="toggle-dark">🌙 حالت شب</button>
+        <p style="text-align:center;margin-top:20px;font-size:12px;color:#666;">مدیر: Amirhosein99</p>
+        <div id="status" style="text-align:center;margin-top:10px;font-size:14px;color:#4CAF50;">✅ متصل به دیتابیس Gist</div>
+    </div>
+
+    <!-- ========== صفحه ثبت نام ========== -->
+    <div id="registerPage" class="page light-green">
+        <h2>📝 ثبت نام</h2>
+        <input id="regName" placeholder="👤 اسم کاربری">
+        <input id="regPass" type="password" placeholder="🔒 رمز عبور">
+        <select id="regRole">
+            <option value="student">👨‍🎓 دانش آموز</option>
+            <option value="teacher">👨‍🏫 معلم</option>
+            <option value="deputy">👨‍💼 معاون</option>
+        </select>
+        <button onclick="registerUser()">✅ تایید ثبت نام</button>
+        <button onclick="showPage('mainPage')" class="back-btn">🔙 برگشت</button>
+        <div id="regMsg" style="margin-top:10px;color:#4CAF50;"></div>
+    </div>
+
+    <!-- ========== صفحه ورود ========== -->
+    <div id="loginPage" class="page light-green">
+        <h2>🔑 ورود</h2>
+        <input id="loginName" placeholder="👤 اسم کاربری">
+        <input id="loginPass" type="password" placeholder="🔒 رمز عبور">
+        <button onclick="loginUser()">✅ تایید</button>
+        <button onclick="showPage('mainPage')" class="back-btn">🔙 برگشت</button>
+        <div id="loginMsg" style="margin-top:10px;color:#f44336;"></div>
+    </div>
+
+    <!-- ========== صفحه مدیر ========== -->
+    <div id="adminPage" class="page green-bg">
+        <h2>👑 پنل مدیریت</h2>
+        <p style="text-align:center;color:#2e7d32;">خوش اومدی مدیر!</p>
+        <button onclick="toggleDarkMode()" class="toggle-dark">🌙 حالت شب</button>
+        
+        <h3>📋 لیست دانش آموزان</h3>
+        <div id="adminStudents"></div>
+        <h3>📋 لیست معلم‌ها</h3>
+        <div id="adminTeachers"></div>
+        <h3>📋 لیست معاون‌ها</h3>
+        <div id="adminDeputies"></div>
+        <h3>📊 لیست نمرات معلم‌ها</h3>
+        <div id="adminTeacherGrades"></div>
+        <h3>📊 لیست نمرات دانش آموزان</h3>
+        <div id="adminStudentGrades"></div>
+        <h3>📢 اطلاعیه‌ها</h3>
+        <div id="adminNotices"></div>
+        <input id="adminNoticeInput" placeholder="متن اطلاعیه...">
+        <button onclick="sendAdminNotice()">📢 ارسال اطلاعیه</button>
+        <h3>💬 چت با معاون</h3>
+        <button onclick="showPage('adminDeputyChatPage')" class="secondary">گفتگو با معاون</button>
+        <h3>🏫 مدیریت گروه‌های مدرسه</h3>
+        <button onclick="showPage('adminGroupPage')" class="secondary">مدیریت گروه‌ها</button>
+        <button onclick="logout()" class="danger">🚪 خروج</button>
+    </div>
+
+    <!-- ========== چت مدیر با معاون ========== -->
+    <div id="adminDeputyChatPage" class="page light-green">
+        <h2>💬 چت با معاون</h2>
+        <div id="adminDeputyChatList" class="group-list"></div>
+        <div id="adminDeputyChatArea" style="display:none;">
+            <h3 id="adminDeputyChatTitle">چت با معاون</h3>
+            <div class="chat-box" id="adminDeputyChatBox"></div>
+            <div style="display:flex;gap:10px;">
+                <input id="adminDeputyChatInput" placeholder="پیامت رو بنویس...">
+                <button onclick="sendAdminDeputyMessage()" style="flex:0;padding:10px 20px;">📤</button>
+            </div>
+        </div>
+        <button onclick="showPage('adminPage')" class="back-btn">🔙 برگشت</button>
+    </div>
+
+    <!-- ========== صفحه مدیریت گروه مدرسه ========== -->
+    <div id="adminGroupPage" class="page light-green">
+        <h2>🏫 مدیریت گروه‌های مدرسه</h2>
+        <button onclick="createSchoolGroup()" class="secondary">➕ ایجاد گروه مدرسه</button>
+        <div id="adminGroups" class="group-list"></div>
+        <div id="adminChatArea" style="display:none;">
+            <h3 id="adminChatTitle">چت گروه</h3>
+            <div class="chat-box" id="adminChatBox"></div>
+            <div style="display:flex;gap:10px;">
+                <input id="adminChatInput" placeholder="پیامت رو بنویس...">
+                <button onclick="sendAdminMessage()" style="flex:0;padding:10px 20px;">📤</button>
+            </div>
+        </div>
+        <button onclick="showPage('adminPage')" class="back-btn">🔙 برگشت</button>
+    </div>
+
+    <!-- ========== صفحه معاون ========== -->
+    <div id="deputyPage" class="page light-green">
+        <h2>👨‍💼 پنل معاون</h2>
+        <p style="text-align:center;font-size:18px;" id="deputyNameDisplay"></p>
+        <button onclick="toggleDarkMode()" class="toggle-dark">🌙 حالت شب</button>
+        
+        <h3>📋 لیست کاربران</h3>
+        <div id="deputyUsers"></div>
+        <h3>📊 ثبت نمره معلم</h3>
+        <input id="deputyTeacherGradeName" placeholder="اسم معلم">
+        <input id="deputyTeacherGradeScore" type="number" placeholder="نمره (0-20)" min="0" max="20">
+        <button onclick="submitDeputyTeacherGrade()">ثبت نمره معلم</button>
+        <div id="deputyTeacherGradeMsg"></div>
+        <h3>📊 ثبت نمره دانش آموز</h3>
+        <input id="deputyStudentGradeName" placeholder="اسم دانش آموز">
+        <input id="deputyStudentGradeScore" type="number" placeholder="نمره (0-20)" min="0" max="20">
+        <button onclick="submitDeputyStudentGrade()">ثبت نمره دانش آموز</button>
+        <div id="deputyStudentGradeMsg"></div>
+        <h3>📊 لیست نمرات معلم‌ها</h3>
+        <div id="deputyTeacherGradesTable"></div>
+        <h3>📊 لیست نمرات دانش آموزان</h3>
+        <div id="deputyStudentGradesTable"></div>
+        <h3>🏫 نظارت بر گروه‌ها</h3>
+        <div id="deputyGroupsList" class="group-list"></div>
+        <h3>💬 چت با مدیر</h3>
+        <button onclick="showPage('deputyChatPage')" class="secondary">گفتگو با مدیر</button>
+        <button onclick="logout()" class="danger">🚪 خروج</button>
+    </div>
+
+    <!-- ========== چت معاون با مدیر ========== -->
+    <div id="deputyChatPage" class="page light-green">
+        <h2>💬 چت با مدیر</h2>
+        <div id="deputyChatArea">
+            <h3>چت با مدیر</h3>
+            <div class="chat-box" id="deputyChatBox"></div>
+            <div style="display:flex;gap:10px;">
+                <input id="deputyChatInput" placeholder="پیامت رو بنویس...">
+                <button onclick="sendDeputyMessage()" style="flex:0;padding:10px 20px;">📤</button>
+            </div>
+        </div>
+        <button onclick="showPage('deputyPage')" class="back-btn">🔙 برگشت</button>
+    </div>
+
+    <!-- ========== صفحه معلم ========== -->
+    <div id="teacherPage" class="page light-green">
+        <h2>👨‍🏫 پنل معلم</h2>
+        <p style="text-align:center;font-size:18px;" id="teacherNameDisplay"></p>
+        <button onclick="toggleDarkMode()" class="toggle-dark">🌙 حالت شب</button>
+        <div class="btn-group">
+            <button onclick="showPage('teachPage')" class="secondary">📚 تدریس مجازی</button>
+            <button onclick="showPage('gradePage')" class="secondary">📊 ثبت نمره</button>
+            <button onclick="showPage('attendancePage')" class="secondary">📋 حضور و غیاب</button>
+        </div>
+        <h3>📢 اطلاعیه‌ها</h3>
+        <div id="teacherNotices"></div>
+        <h3>🏫 گروه‌های مدرسه</h3>
+        <div id="teacherSchoolGroups" class="group-list"></div>
+        <h3>📋 نمرات ثبت شده</h3>
+        <div id="teacherGradesTable"></div>
+        <button onclick="logout()" class="danger">🚪 خروج</button>
+    </div>
+
+    <!-- ========== صفحه تدریس معلم ========== -->
+    <div id="teachPage" class="page light-green">
+        <h2>📚 تدریس مجازی</h2>
+        <button onclick="createGroup()" class="secondary">➕ ایجاد گروه جدید</button>
+        <div id="teacherGroups" class="group-list"></div>
+        <div id="teacherChatArea" style="display:none;">
+            <h3 id="teacherChatTitle">چت گروه</h3>
+            <div class="chat-box" id="teacherChatBox"></div>
+            <div style="display:flex;gap:10px;">
+                <input id="teacherChatInput" placeholder="پیامت رو بنویس...">
+                <button onclick="sendTeacherMessage()" style="flex:0;padding:10px 20px;">📤</button>
+            </div>
+        </div>
+        <button onclick="showPage('teacherPage')" class="back-btn">🔙 برگشت</button>
+    </div>
+
+    <!-- ========== صفحه ثبت نمره معلم ========== -->
+    <div id="gradePage" class="page light-green">
+        <h2>📊 ثبت نمره</h2>
+        <input id="gradeStudent" placeholder="👤 اسم دانش آموز">
+        <input id="gradeScore" type="number" placeholder="📝 نمره (0-20)" min="0" max="20">
+        <input id="gradeDetail" placeholder="📌 جزییات (اختیاری)">
+        <button onclick="submitGrade()">✅ ثبت نمره</button>
+        <div id="gradeMsg" style="margin-top:10px;"></div>
+        <button onclick="showPage('teacherPage')" class="back-btn">🔙 برگشت</button>
+    </div>
+
+    <!-- ========== صفحه حضور و غیاب ========== -->
+    <div id="attendancePage" class="page light-green">
+        <h2>📋 حضور و غیاب</h2>
+        <input id="attendanceStudent" placeholder="اسم دانش آموز">
+        <div style="display:flex;gap:10px;">
+            <button onclick="markAttendance('present')" class="secondary" style="background:#4CAF50;color:#fff;">✅ حاضر</button>
+            <button onclick="markAttendance('absent')" class="secondary" style="background:#f44336;color:#fff;">❌ غایب</button>
+        </div>
+        <div id="attendanceList"></div>
+        <button onclick="showPage('teacherPage')" class="back-btn">🔙 برگشت</button>
+    </div>
+
+    <!-- ========== صفحه دانش آموز ========== -->
+    <div id="studentPage" class="page light-green">
+        <h2>👨‍🎓 پنل دانش آموز</h2>
+        <p style="text-align:center;font-size:18px;" id="studentNameDisplay"></p>
+        <button onclick="toggleDarkMode()" class="toggle-dark">🌙 حالت شب</button>
+        <h3>📊 نمرات من</h3>
+        <div id="studentGradesTable"></div>
+        <h3>📈 نمودار نمرات</h3>
+        <div id="studentChart"></div>
+        <h3>📢 اطلاعیه‌ها</h3>
+        <div id="studentNotices"></div>
+        <h3>🏫 گروه‌های مدرسه</h3>
+        <div id="studentSchoolGroups" class="group-list"></div>
+        <h3>گروه‌های معلم:</h3>
+        <div id="studentGroups" class="group-list"></div>
+        <div id="studentChatArea" style="display:none;">
+            <h3 id="studentChatTitle">چت گروه</h3>
+            <div class="chat-box" id="studentChatBox"></div>
+            <div style="display:flex;gap:10px;">
+                <input id="studentChatInput" placeholder="پیامت رو بنویس...">
+                <button onclick="sendStudentMessage()" style="flex:0;padding:10px 20px;">📤</button>
+            </div>
+        </div>
+        <button onclick="logout()" class="danger">🚪 خروج</button>
+    </div>
+
+</div>
+
+<script>
+    // ==========================================
+    // تنظیمات گیت‌هاب Gist
+    // ==========================================
+    const GIST_ID = 345fb285992f213ef7426f883f123511 ← GIST_ID خودت رو بذار
+    const GITHUB_TOKEN = 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 ← توکن خودت رو بذار
+    const GIST_URL = `https://api.github.com/gists/${GIST_ID}`;
+
+    // ==========================================
+    // توابع ذخیره‌سازی با Gist
+    // ==========================================
+    async function loadData() {
+        try {
+            const response = await fetch(GIST_URL, {
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}` }
+            });
+            const data = await response.json();
+            const content = JSON.parse(data.files['data.json'].content);
+            return content;
+        } catch(e) {
+            console.log('خطا در بارگذاری:', e);
+            return { users: [], groups: [], grades: [], teacherGrades: [], chat: [], notices: [], attendance: [] };
+        }
+    }
+
+    async function saveData(data) {
+        try {
+            const response = await fetch(GIST_URL, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${GITHUB_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    files: {
+                        'data.json': {
+                            content: JSON.stringify(data, null, 2)
+                        }
+                    }
+                })
+            });
+            return response.ok;
+        } catch(e) {
+            console.log('خطا در ذخیره:', e);
+            return false;
+        }
+    }
+
+    // ==========================================
+    // داده‌ها
+    // ==========================================
+    let users = [];
+    let groups = [];
+    let grades = [];
+    let teacherGrades = [];
+    let deputyGrades = [];
+    let deputyStudentGrades = [];
+    let adminDeputyChat = [];
+    let notices = [];
+    let attendance = [];
+    let currentUser = null;
+    let currentGroup = null;
+    let isAdmin = false;
+    let isDeputy = false;
+
+    // ========== بارگذاری داده‌ها ==========
+    async function refreshData() {
+        const data = await loadData();
+        users = data.users || [];
+        groups = data.groups || [];
+        grades = data.grades || [];
+        teacherGrades = data.teacherGrades || [];
+        deputyGrades = data.deputyGrades || [];
+        deputyStudentGrades = data.deputyStudentGrades || [];
+        adminDeputyChat = data.adminDeputyChat || [];
+        notices = data.notices || [];
+        attendance = data.attendance || [];
+        if (isAdmin) updateAdminPanel();
+        if (isDeputy) updateDeputyPanel();
+        renderNotices();
+        renderAttendance();
+    }
+
+    async function saveAllData() {
+        await saveData({
+            users, groups, grades, teacherGrades, 
+            deputyGrades, deputyStudentGrades, adminDeputyChat,
+            notices, attendance
+        });
+    }
+
+    // ========== حساب مدیر ==========
+    async function initAdmin() {
+        const data = await loadData();
+        let usersList = data.users || [];
+        if (!usersList.find(u => u.username === 'Amirhosein99')) {
+            usersList.push({ username: 'Amirhosein99', password: 'Amirhosein77', role: 'admin' });
+            await saveData({ ...data, users: usersList });
+        }
+        refreshData();
+    }
+
+    // ==========================================
+    // نمایش صفحات
+    // ==========================================
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        if (pageId === 'adminPage') { updateAdminPanel(); renderNotices(); }
+        if (pageId === 'adminGroupPage') loadAdminGroups();
+        if (pageId === 'adminDeputyChatPage') loadAdminDeputyChat();
+        if (pageId === 'deputyPage') updateDeputyPanel();
+        if (pageId === 'deputyChatPage') renderDeputyChat();
+        if (pageId === 'studentPage') { loadStudentGroups(); updateStudentGrades(); loadStudentSchoolGroups(); renderStudentChart(); renderNotices(); }
+        if (pageId === 'teacherPage') { updateTeacherGrades(); loadTeacherSchoolGroups(); renderNotices(); }
+        if (pageId === 'teachPage') loadTeacherGroups();
+        if (pageId === 'attendancePage') renderAttendance();
+        if (pageId !== 'teachPage') document.getElementById('teacherChatArea').style.display = 'none';
+        if (pageId !== 'adminGroupPage') document.getElementById('adminChatArea').style.display = 'none';
+        if (pageId !== 'studentPage') document.getElementById('studentChatArea').style.display = 'none';
+        if (pageId !== 'adminDeputyChatPage') document.getElementById('adminDeputyChatArea').style.display = 'none';
+        if (pageId !== 'deputyChatPage') document.getElementById('deputyChatArea').style.display = 'none';
+    }
+
+    // ==========================================
+    // صفحه انتظار
+    // ==========================================
+    setTimeout(() => {
+        document.getElementById('loadingPage').style.display = 'none';
+        document.getElementById('mainPage').classList.add('active');
+        initAdmin();
+    }, 2000);
+
+    // ==========================================
+    // حالت شب
+    // ==========================================
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+    }
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark');
+    }
+
+    // ==========================================
+    // ثبت نام و ورود
+    // ==========================================
+    async function registerUser() {
+        let name = document.getElementById('regName').value.trim();
+        let pass = document.getElementById('regPass').value.trim();
+        let role = document.getElementById('regRole').value;
+
+        if (!name || !pass) {
+            document.getElementById('regMsg').innerHTML = '❌ همه چیز رو پر کن!';
+            return;
+        }
+        if (users.find(u => u.username === name)) {
+            document.getElementById('regMsg').innerHTML = '❌ این اسم قبلاً ثبت شده!';
+            return;
+        }
+
+        users.push({ username: name, password: pass, role: role });
+        await saveAllData();
+        document.getElementById('regMsg').innerHTML = '✅ ثبت نام موفق! حالا برو ورود.';
+        document.getElementById('regName').value = '';
+        document.getElementById('regPass').value = '';
+    }
+
+    function loginUser() {
+        let name = document.getElementById('loginName').value.trim();
+        let pass = document.getElementById('loginPass').value.trim();
+
+        let user = users.find(u => u.username === name && u.password === pass);
+        if (!user) {
+            document.getElementById('loginMsg').innerHTML = '❌ اسم یا رمز اشتباهه!';
+            return;
+        }
+
+        currentUser = user;
+        isAdmin = (user.role === 'admin');
+        isDeputy = (user.role === 'deputy');
+        document.getElementById('loginMsg').innerHTML = '';
+        document.getElementById('loginName').value = '';
+        document.getElementById('loginPass').value = '';
+
+        if (user.role === 'admin') {
+            showPage('adminPage');
+        } else if (user.role === 'deputy') {
+            document.getElementById('deputyNameDisplay').textContent = '👤 ' + user.username;
+            updateDeputyPanel();
+            showPage('deputyPage');
+        } else if (user.role === 'teacher') {
+            document.getElementById('teacherNameDisplay').textContent = '👤 ' + user.username;
+            updateTeacherGrades();
+            loadTeacherSchoolGroups();
+            showPage('teacherPage');
+        } else if (user.role === 'student') {
+            document.getElementById('studentNameDisplay').textContent = '👤 ' + user.username;
+            loadStudentGroups();
+            updateStudentGrades();
+            loadStudentSchoolGroups();
+            showPage('studentPage');
+        }
+    }
+
+    function logout() {
+        currentUser = null;
+        isAdmin = false;
+        isDeputy = false;
+        currentGroup = null;
+        document.getElementById('studentChatArea').style.display = 'none';
+        document.getElementById('teacherChatArea').style.display = 'none';
+        document.getElementById('adminChatArea').style.display = 'none';
+        document.getElementById('adminDeputyChatArea').style.display = 'none';
+        document.getElementById('deputyChatArea').style.display = 'none';
+        showPage('mainPage');
+    }
+
+    // ==========================================
+    // حذف کاربر
+    // ==========================================
+    async function deleteUser(username) {
+        if (username === 'Amirhosein99') {
+            alert('❌ نمی‌تونی مدیر رو حذف کنی!');
+            return;
+        }
+        if (!confirm(`آیا مطمئنی می‌خوای ${username} رو حذف کنی؟`)) return;
+
+        users = users.filter(u => u.username !== username);
+        grades = grades.filter(g => g.student !== username && g.teacher !== username);
+        teacherGrades = teacherGrades.filter(g => g.teacher !== username);
+        deputyGrades = deputyGrades.filter(g => g.teacher !== username);
+        deputyStudentGrades = deputyStudentGrades.filter(g => g.student !== username);
+        groups.forEach(g => {
+            g.students = g.students.filter(s => s !== username);
+            if (g.teacher === username && !g.isSchoolGroup) g.teacher = 'حذف شده';
+        });
+        await saveAllData();
+        updateAdminPanel();
+        updateDeputyPanel();
+        alert(`✅ ${username} با موفقیت حذف شد!`);
+    }
+
+    // ==========================================
+    // گروه‌های مدرسه
+    // ==========================================
+    async function createSchoolGroup() {
+        if (!currentUser) return;
+        let groupName = prompt('اسم گروه مدرسه رو وارد کن:');
+        if (!groupName) return;
+        groups.push({
+            id: Date.now(),
+            name: '🏫 ' + groupName,
+            teacher: 'مدیر مدرسه',
+            messages: [],
+            students: [],
+            isSchoolGroup: true
+        });
+        await saveAllData();
+        loadAdminGroups();
+        if (isDeputy) updateDeputyPanel();
+    }
+
+    function loadAdminGroups() {
+        let container = document.getElementById('adminGroups');
+        let schoolGroups = groups.filter(g => g.isSchoolGroup === true);
+        if (schoolGroups.length === 0) {
+            container.innerHTML = '<p style="color:#999;">هیچ گروه مدرسه‌ای ساخته نشده!</p>';
+            return;
+        }
+        container.innerHTML = schoolGroups.map(g => `
+            <div class="group-item" onclick="openAdminGroup(${g.id})">
+                ${g.name} (ساخته شده توسط: ${g.teacher}) - ${g.students.length} دانش‌آموز
+            </div>
+        `).join('');
+    }
+
+    function openAdminGroup(groupId) {
+        currentGroup = groups.find(g => g.id === groupId);
+        document.getElementById('adminChatArea').style.display = 'block';
+        document.getElementById('adminChatTitle').textContent = currentGroup.name;
+        renderAdminChat();
+    }
+
+    function renderAdminChat() {
+        let box = document.getElementById('adminChatBox');
+        if (!currentGroup) return;
+        box.innerHTML = currentGroup.messages.map(m => `
+            <div class="chat-msg">
+                <span class="sender">${m.sender}</span>
+                ${m.text}
+                <span class="time">${m.time}</span>
+            </div>
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendAdminMessage() {
+        let input = document.getElementById('adminChatInput');
+        if (!input.value.trim() || !currentGroup) return;
+        currentGroup.messages.push({
+            sender: currentUser.username + ' (مدیر)',
+            text: input.value,
+            time: new Date().toLocaleTimeString()
+        });
+        await saveAllData();
+        renderAdminChat();
+        input.value = '';
+    }
+
+    // ==========================================
+    // اطلاعیه‌ها
+    // ==========================================
+    async function sendAdminNotice() {
+        let input = document.getElementById('adminNoticeInput');
+        if (!input.value.trim()) return;
+        notices.push({
+            sender: 'مدیر',
+            text: input.value,
+            time: new Date().toLocaleString()
+        });
+        await saveAllData();
+        document.getElementById('adminNoticeInput').value = '';
+        renderNotices();
+        updateAdminPanel();
+    }
+
+    function renderNotices() {
+        let containers = ['adminNotices', 'teacherNotices', 'studentNotices'];
+        containers.forEach(id => {
+            let el = document.getElementById(id);
+            if (el) {
+                if (notices.length === 0) {
+                    el.innerHTML = '<p style="color:#999;">هنوز اطلاعیه‌ای ثبت نشده!</p>';
+                } else {
+                    el.innerHTML = notices.slice().reverse().map(n => `
+                        <div class="notice-box">
+                            <strong>📢 ${n.sender}</strong>
+                            <p>${n.text}</p>
+                            <small style="color:#999;">${n.time}</small>
+                        </div>
+                    `).join('');
+                }
+            }
+        });
+    }
+
+    // ==========================================
+    // پنل مدیریت
+    // ==========================================
+    function updateAdminPanel() {
+        let students = users.filter(u => u.role === 'student');
+        document.getElementById('adminStudents').innerHTML = students.length ? 
+            students.map(s => `
+                <div class="user-row">
+                    <span class="name">${s.username}</span>
+                    <div>
+                        <span class="role-badge">دانش‌آموز</span>
+                        <button class="small-danger" onclick="deleteUser('${s.username}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('') :
+            '<p style="color:#999;">هیچ دانش‌آموزی ثبت‌نام نکرده!</p>';
+
+        let teachers = users.filter(u => u.role === 'teacher');
+        document.getElementById('adminTeachers').innerHTML = teachers.length ? 
+            teachers.map(s => `
+                <div class="user-row">
+                    <span class="name">${s.username}</span>
+                    <div>
+                        <span class="role-badge">معلم</span>
+                        <button class="small-danger" onclick="deleteUser('${s.username}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('') :
+            '<p style="color:#999;">هیچ معلمی ثبت‌نام نکرده!</p>';
+
+        let deputies = users.filter(u => u.role === 'deputy');
+        document.getElementById('adminDeputies').innerHTML = deputies.length ? 
+            deputies.map(s => `
+                <div class="user-row">
+                    <span class="name">${s.username}</span>
+                    <div>
+                        <span class="role-badge">معاون</span>
+                        <button class="small-danger" onclick="deleteUser('${s.username}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('') :
+            '<p style="color:#999;">هیچ معاونی ثبت‌نام نکرده!</p>';
+
+        let teacherGradesContainer = document.getElementById('adminTeacherGrades');
+        let allTeacherGrades = [...teacherGrades, ...deputyGrades];
+        if (allTeacherGrades.length === 0) {
+            teacherGradesContainer.innerHTML = '<p style="color:#999;">هنوز نمره‌ای برای معلم ثبت نشده!</p>';
+        } else {
+            teacherGradesContainer.innerHTML = `<table>
+                <tr><th>معلم</th><th>نمره</th><th>تاریخ</th></tr>
+                ${allTeacherGrades.map(g => `<tr><td>${g.teacher}</td><td>${g.score}</td><td>${g.date}</td></tr>`).join('')}
+            </table>`;
+        }
+
+        let studentGradesContainer = document.getElementById('adminStudentGrades');
+        let allStudentGrades = [...grades, ...deputyStudentGrades];
+        if (allStudentGrades.length === 0) {
+            studentGradesContainer.innerHTML = '<p style="color:#999;">هنوز نمره‌ای برای دانش آموز ثبت نشده!</p>';
+        } else {
+            studentGradesContainer.innerHTML = `<table>
+                <tr><th>دانش آموز</th><th>نمره</th><th>معلم</th></tr>
+                ${allStudentGrades.map(g => `<tr><td>${g.student}</td><td>${g.score}</td><td>${g.teacher}</td></tr>`).join('')}
+            </table>`;
+        }
+        renderNotices();
+    }
+
+    // ==========================================
+    // چت مدیر-معاون
+    // ==========================================
+    function loadAdminDeputyChat() {
+        let container = document.getElementById('adminDeputyChatList');
+        let deputies = users.filter(u => u.role === 'deputy');
+        if (deputies.length === 0) {
+            container.innerHTML = '<p style="color:#999;">هیچ معاونی ثبت نام نکرده!</p>';
+            return;
+        }
+        container.innerHTML = deputies.map(d => `
+            <div class="group-item" onclick="openAdminDeputyChat('${d.username}')">
+                👨‍💼 ${d.username}
+            </div>
+        `).join('');
+    }
+
+    let currentDeputyChat = null;
+
+    function openAdminDeputyChat(deputyName) {
+        currentDeputyChat = deputyName;
+        document.getElementById('adminDeputyChatArea').style.display = 'block';
+        document.getElementById('adminDeputyChatTitle').textContent = '💬 چت با ' + deputyName;
+        renderAdminDeputyChat();
+    }
+
+    function renderAdminDeputyChat() {
+        let box = document.getElementById('adminDeputyChatBox');
+        if (!currentDeputyChat) return;
+        let msgs = adminDeputyChat.filter(m => 
+            (m.sender === 'admin' && m.receiver === currentDeputyChat) ||
+            (m.sender === currentDeputyChat && m.receiver === 'admin')
+        );
+        box.innerHTML = msgs.map(m => `
+            <div class="chat-msg">
+                <span class="sender">${m.sender === 'admin' ? 'مدیر' : currentDeputyChat}</span>
+                ${m.text}
+                <span class="time">${m.time}</span>
+            </div>
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendAdminDeputyMessage() {
+        let input = document.getElementById('adminDeputyChatInput');
+        if (!input.value.trim() || !currentDeputyChat) return;
+        adminDeputyChat.push({
+            sender: 'admin',
+            receiver: currentDeputyChat,
+            text: input.value,
+            time: new Date().toLocaleTimeString()
+        });
+        await saveAllData();
+        renderAdminDeputyChat();
+        input.value = '';
+    }
+
+    function renderDeputyChat() {
+        let box = document.getElementById('deputyChatBox');
+        if (!currentUser) return;
+        let msgs = adminDeputyChat.filter(m => 
+            (m.sender === 'admin' && m.receiver === currentUser.username) ||
+            (m.sender === currentUser.username && m.receiver === 'admin')
+        );
+        box.innerHTML = msgs.map(m => `
+            <div class="chat-msg">
+                <span class="sender">${m.sender === 'admin' ? 'مدیر' : currentUser.username}</span>
+                ${m.text}
+                <span class="time">${m.time}</span>
+            </div>
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendDeputyMessage() {
+        let input = document.getElementById('deputyChatInput');
+        if (!input.value.trim() || !currentUser) return;
+        adminDeputyChat.push({
+            sender: currentUser.username,
+            receiver: 'admin',
+            text: input.value,
+            time: new Date().toLocaleTimeString()
+        });
+        await saveAllData();
+        renderDeputyChat();
+        input.value = '';
+    }
+
+    // ==========================================
+    // گروه‌های معلم
+    // ==========================================
+    async function createGroup() {
+        if (!currentUser) return;
+        let groupName = prompt('اسم گروه رو وارد کن:');
+        if (!groupName) return;
+        groups.push({
+            id: Date.now(),
+            name: groupName,
+            teacher: currentUser.username,
+            messages: [],
+            students: [],
+            isSchoolGroup: false
+        });
+        await saveAllData();
+        loadTeacherGroups();
+        if (isDeputy) updateDeputyPanel();
+    }
+
+    function loadTeacherGroups() {
+        let container = document.getElementById('teacherGroups');
+        let myGroups = groups.filter(g => g.teacher === currentUser.username && g.isSchoolGroup === false);
+        if (myGroups.length === 0) {
+            container.innerHTML = '<p style="color:#999;">هنوز گروهی نساختی!</p>';
+            return;
+        }
+        container.innerHTML = myGroups.map(g => `
+            <div class="group-item" onclick="openTeacherGroup(${g.id})">
+                📚 ${g.name} (${g.students.length} دانش‌آموز)
+            </div>
+        `).join('');
+    }
+
+    function openTeacherGroup(groupId) {
+        currentGroup = groups.find(g => g.id === groupId);
+        document.getElementById('teacherChatArea').style.display = 'block';
+        document.getElementById('teacherChatTitle').textContent = '📚 ' + currentGroup.name;
+        renderTeacherChat();
+    }
+
+    function renderTeacherChat() {
+        let box = document.getElementById('teacherChatBox');
+        if (!currentGroup) return;
+        box.innerHTML = currentGroup.messages.map(m => `
+            <div class="chat-msg">
+                <span class="sender">${m.sender}</span>
+                ${m.text}
+                <span class="time">${m.time}</span>
+            </div>
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendTeacherMessage() {
+        let input = document.getElementById('teacherChatInput');
+        if (!input.value.trim() || !currentGroup) return;
+        currentGroup.messages.push({
+            sender: currentUser.username + ' (معلم)',
+            text: input.value,
+            time: new Date().toLocaleTimeString()
+        });
+        await saveAllData();
+        renderTeacherChat();
+        input.value = '';
+    }
+
+    // ==========================================
+    // دانش آموز
+    // ==========================================
+    function loadStudentGroups() {
+        let container = document.getElementById('studentGroups');
+        let teacherGroups = groups.filter(g => g.isSchoolGroup === false);
+        if (teacherGroups.length === 0) {
+            container.innerHTML = '<p style="color:#999;">هیچ گروهی ساخته نشده!</p>';
+            return;
+        }
+        container.innerHTML = teacherGroups.map(g => `
+            <div class="group-item" onclick="joinGroup(${g.id})">
+                ${g.name} (معلم: ${g.teacher})
+            </div>
+        `).join('');
+    }
+
+    async function joinGroup(groupId) {
+        let group = groups.find(g => g.id === groupId);
+        if (!group) return;
+        if (!group.students.includes(currentUser.username)) {
+            group.students.push(currentUser.username);
+            await saveAllData();
+        }
+        currentGroup = group;
+        document.getElementById('studentChatArea').style.display = 'block';
+        document.getElementById('studentChatTitle').textContent = group.name;
+        renderStudentChat();
+    }
+
+    function renderStudentChat() {
+        let box = document.getElementById('studentChatBox');
+        if (!currentGroup) return;
+        box.innerHTML = currentGroup.messages.map(m => `
+            <div class="chat-msg">
+                <span class="sender">${m.sender}</span>
+                ${m.text}
+                <span class="time">${m.time}</span>
+            </div>
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+
+    async function sendStudentMessage() {
+        let input = document.getElementById('studentChatInput');
+        if (!input.value.trim() || !currentGroup) return;
+        currentGroup.messages.push({
+            sender: currentUser.username + ' (دانش‌آموز)',
+            text: input.value,
+            time: new Date().toLocaleTimeString()
+        });
+        await saveAllData();
+        renderStudentChat();
+        input.value = '';
+    }
+
+    function loadStudentSchoolGroups() {
+        let container = document.getElementById('studentSchoolGroups');
+        let schoolGroups = groups.filter(g => g.isSchoolGroup === true);
+        if (schoolGroups.length === 0) {
+            container.innerHTML = '<p style="color:#999;">هیچ گروه مدرسه‌ای ساخته نشده!</p>';
+            return;
+        }
+        container.innerHTML = schoolGroups.map(g => `
+            <div class="group-item" onclick="joinGroupFromStudent(${g.id})">
+                ${g.name} (${g.students.length} دانش‌آموز)
+            </div>
+        `).join('');
+    }
+
+    async function joinGroupFromStudent(groupId) {
+        let group = groups.find(g => g.id === groupId);
+        if (!group) return;
+        if (!group.students.includes(currentUser.username)) {
+            group.students.push(currentUser.username);
+            await saveAllData();
+        }
+        currentGroup = group;
+        document.getElementById('studentChatArea').style.display = 'block';
+        document.getElementById('studentChatTitle').textContent = group.name;
+        renderStudentChat();
+    }
+
+    function loadTeacherSchoolGroups() {
+        let container = document.getElementById('teacherSchoolGroups');
+        let schoolGroups = groups.filter(g => g.isSchoolGroup === true);
+        if (schoolGroups.length === 0) {
+            container.innerHTML = '<p style="color:#999;">هیچ گروه مدرسه‌ای ساخته نشده!</p>';
+            return;
+        }
+        container.innerHTML = schoolGroups.map(g => `
+            <div class="group-item" onclick="joinGroupFromTeacher(${g.id})">
+                ${g.name} (${g.students.length} دانش‌آموز)
+            </div>
+        `).join('');
+    }
+
+    async function joinGroupFromTeacher(groupId) {
+        let group = groups.find(g => g.id === groupId);
+        if (!group) return;
+        if (!group.students.includes(currentUser.username)) {
+            group.students.push(currentUser.username);
+            await saveAllData();
+        }
+        currentGroup = group;
+        document.getElementById('teacherChatArea').style.display = 'block';
+        document.getElementById('teacherChatTitle').textContent = group.name;
+        renderTeacherChat();
+    }
+
+    // ==========================================
+    // نمرات معلم
+    // ==========================================
+    async function submitGrade() {
+        let student = document.getElementById('gradeStudent').value.trim();
+        let score = parseFloat(document.getElementById('gradeScore').value);
+        let detail = document.getElementById('gradeDetail').value.trim();
+
+        if (!student || isNaN(score) || score < 0 || score > 20) {
+            document.getElementById('gradeMsg').innerHTML = '❌ اطلاعات رو درست پر کن!';
+            return;
+        }
+
+        grades.push({ student, score, detail, teacher: currentUser.username, date: new Date().toLocaleDateString() });
+        await saveAllData();
+        document.getElementById('gradeMsg').innerHTML = '✅ نمره ثبت شد!';
+        document.getElementById('gradeStudent').value = '';
+        document.getElementById('gradeScore').value = '';
+        document.getElementById('gradeDetail').value = '';
+        updateTeacherGrades();
+        if (isDeputy) updateDeputyPanel();
+    }
+
+    function updateTeacherGrades() {
+        let container = document.getElementById('teacherGradesTable');
+        let myGrades = grades.filter(g => g.teacher === currentUser.username);
+        if (myGrades.length === 0) {
+            container.innerHTML = '<p style="color:#999;">هنوز نمره‌ای ثبت نکردی!</p>';
+            return;
+        }
+        container.innerHTML = `<table>
+            <tr><th>دانش‌آموز</th><th>نمره</th><th>جزییات</th></tr>
+            ${myGrades.map(g => `<tr><td>${g.student}</td><td>${g.score}</td><td>${g.detail || '-'}</td></tr>`).join('')}
+        </table>`;
+    }
+
+    function updateStudentGrades() {
+        let container = document.getElementById('studentGradesTable');
+        let myGrades = grades.filter(g => g.student === currentUser.username);
+        let deputyGradesList = deputyStudentGrades.filter(g => g.student === currentUser.username);
+        let allGrades = [...myGrades, ...deputyGradesList];
+        if (allGrades.length === 0) {
+            container.innerHTML = '<p style="color:#999;">هنوز نمره‌ای ثبت نشده!</p>';
+            return;
+        }
+        container.innerHTML = `<table>
+            <tr><th>نمره</th><th>معلم</th><th>جزییات</th></tr>
+            ${allGrades.map(g => `<tr><td>${g.score}</td><td>${g.teacher}</td><td>${g.detail || '-'}</td></tr>`).join('')}
+        </table>`;
+        renderStudentChart();
+    }
+
+    // ==========================================
+    // نمودار نمرات
+    // ==========================================
+    function renderStudentChart() {
+        let container = document.getElementById('studentChart');
+        let myGrades = grades.filter(g => g.student === currentUser.username);
+        let deputyGradesList = deputyStudentGrades.filter(g => g.student === currentUser.username);
+        let allGrades = [...myGrades, ...deputyGradesList];
+        if (allGrades.length === 0) {
+            container.innerHTML = '<p style="color:#999;">نمره‌ای برای نمایش وجود ندارد</p>';
+            return;
+        }
+        container.innerHTML = allGrades.map(g => `
+            <div class="chart-bar">
+                <span style="width:60px;">${g.teacher}</span>
+                <div class="bar" style="width:${(g.score / 20) * 100}%;"></div>
+                <span>${g.score}</span>
+            </div>
+        `).join('');
+    }
+
+    // ==========================================
+    // نمرات معاون
+    // ==========================================
+    async function submitDeputyTeacherGrade() {
+        let name = document.getElementById('deputyTeacherGradeName').value.trim();
+        let score = parseFloat(document.getElementById('deputyTeacherGradeScore').value);
+
+        if (!name || isNaN(score) || score < 0 || score > 20) {
+            document.getElementById('deputyTeacherGradeMsg').innerHTML = '❌ اطلاعات رو درست پر کن!';
+            return;
+        }
+
+        let teacherExists = users.find(u => u.username === name && u.role === 'teacher');
+        if (!teacherExists) {
+            document.getElementById('deputyTeacherGradeMsg').innerHTML = '❌ این معلم وجود نداره!';
+            return;
+        }
+
+        deputyGrades.push({ teacher: name, score, date: new Date().toLocaleDateString() });
+        await saveAllData();
+        document.getElementById('deputyTeacherGradeMsg').innerHTML = '✅ نمره معلم ثبت شد!';
+        document.getElementById('deputyTeacherGradeName').value = '';
+        document.getElementById('deputyTeacherGradeScore').value = '';
+        updateDeputyPanel();
+        updateAdminPanel();
+    }
+
+    async function submitDeputyStudentGrade() {
+        let name = document.getElementById('deputyStudentGradeName').value.trim();
+        let score = parseFloat(document.getElementById('deputyStudentGradeScore').value);
+
+        if (!name || isNaN(score) || score < 0 || score > 20) {
+            document.getElementById('deputyStudentGradeMsg').innerHTML = '❌ اطلاعات رو درست پر کن!';
+            return;
+        }
+
+        let studentExists = users.find(u => u.username === name && u.role === 'student');
+        if (!studentExists) {
+            document.getElementById('deputyStudentGradeMsg').innerHTML = '❌ این دانش آموز وجود نداره!';
+            return;
+        }
+
+        deputyStudentGrades.push({ student: name, score, teacher: currentUser.username, date: new Date().toLocaleDateString() });
+        await saveAllData();
+        document.getElementById('deputyStudentGradeMsg').innerHTML = '✅ نمره دانش آموز ثبت شد!';
+        document.getElementById('deputyStudentGradeName').value = '';
+        document.getElementById('deputyStudentGradeScore').value = '';
+        updateDeputyPanel();
+        updateAdminPanel();
+    }
+
+    // ==========================================
+    // پنل معاون
+    // ==========================================
+    function updateDeputyPanel() {
+        let container = document.getElementById('deputyUsers');
+        let allUsers = users.filter(u => u.username !== 'Amirhosein99');
+        container.innerHTML = allUsers.map(u => `
+            <div class="user-row">
+                <span class="name">${u.username}</span>
+                <span class="role-badge badge-${u.role}">${u.role === 'admin' ? 'مدیر' : u.role === 'teacher' ? 'معلم' : u.role === 'deputy' ? 'معاون' : 'دانش‌آموز'}</span>
+            </div>
+        `).join('');
+
+        let teacherContainer = document.getElementById('deputyTeacherGradesTable');
+        if (deputyGrades.length === 0) {
+            teacherContainer.innerHTML = '<p style="color:#999;">هنوز نمره‌ای برای معلم ثبت نشده!</p>';
+        } else {
+            teacherContainer.innerHTML = `<table>
+                <tr><th>معلم</th><th>نمره</th><th>تاریخ</th></tr>
+                ${deputyGrades.map(g => `<tr><td>${g.teacher}</td><td>${g.score}</td><td>${g.date}</td></tr>`).join('')}
+            </table>`;
+        }
+
+        let studentContainer = document.getElementById('deputyStudentGradesTable');
+        if (deputyStudentGrades.length === 0) {
+            studentContainer.innerHTML = '<p style="color:#999;">هنوز نمره‌ای برای دانش آموز ثبت نشده!</p>';
+        } else {
+            studentContainer.innerHTML = `<table>
+                <tr><th>دانش آموز</th><th>نمره</th><th>معلم</th><th>تاریخ</th></tr>
+                ${deputyStudentGrades.map(g => `<tr><td>${g.student}</td><td>${g.score}</td><td>${g.teacher}</td><td>${g.date}</td></tr>`).join('')}
+            </table>`;
+        }
+
+        let groupContainer = document.getElementById('deputyGroupsList');
+        if (groups.length === 0) {
+            groupContainer.innerHTML = '<p style="color:#999;">هیچ گروهی ساخته نشده!</p>';
+        } else {
+            groupContainer.innerHTML = groups.map(g => `
+                <div class="group-item">
+                    ${g.name} (${g.teacher}) - ${g.students.length} دانش‌آموز
+                    <div style="font-size:12px;color:#666;margin-top:5px;">
+                        ${g.messages.length} پیام
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    // ==========================================
+    // حضور و غیاب
+    // ==========================================
+    async function markAttendance(status) {
+        let name = document.getElementById('attendanceStudent').value.trim();
+        if (!name) {
+            alert('اسم دانش آموز رو بنویس!');
+            return;
+        }
+        let today = new Date().toLocaleDateString();
+        let existing = attendance.find(a => a.student === name && a.date === today);
+        if (existing) {
+            existing.status = status;
+        } else {
+            attendance.push({ student: name, status, date: today, teacher: currentUser.username });
+        }
+        await saveAllData();
+        document.getElementById('attendanceStudent').value = '';
+        renderAttendance();
+    }
+
+    function renderAttendance() {
+        let container = document.getElementById('attendanceList');
+        let today = new Date().toLocaleDateString();
+        let todayAttendance = attendance.filter(a => a.date === today);
+        if (todayAttendance.length === 0) {
+            container.innerHTML = '<p style="color:#999;">امروز هیچ حضور و غیابی ثبت نشده!</p>';
+            return;
+        }
+        container.innerHTML = `<table>
+            <tr><th>دانش آموز</th><th>وضعیت</th><th>معلم</th></tr>
+            ${todayAttendance.map(a => `
+                <tr>
+                    <td>${a.student}</td>
+                    <td>${a.status === 'present' ? '✅ حاضر' : '❌ غایب'}</td>
+                    <td>${a.teacher}</td>
+                </tr>
+            `).join('')}
+        </table>`;
+    }
+
+    console.log('🏫 سامانه مدرسه هوشمند با Gist آماده‌ست!');
+    console.log('👑 مدیر: Amirhosein99 / Amirhosein77');
+</script>
+
+</body>
+</html>
